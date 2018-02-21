@@ -1,5 +1,10 @@
 # colorfil
 Generate 16 color for Xresources colorscheme from one-color
+Using imagemagick as color calculation.
+
+# Dependencies
+* imagemagick - for color calculation
+* sed
 
 # Installation
 
