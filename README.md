@@ -1,6 +1,14 @@
 # colorfil
 Generate 16 color for Xresources colorscheme from one-color
 
+# Installation
+
+    - Download the script :
+      wget https://github.com/yuune/colorfil/raw/master/colorfil
+    - Make the script executable :
+      $ chmod +x colorfil
+    - Then move it to somewhere in your $PATH (/usr/bin, /usr/local/bin, etc)
+
 # Usage
 
     $ colorfil -c [#hexcolor] [-o output_file]
