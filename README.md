@@ -1,12 +1,13 @@
 # colorfil
-Generate 16 color for Xresources colorscheme from one-color
+Generate 16 color for Xresources colorscheme from one-color.
+
 Using imagemagick as color calculation.
 
-# Dependencies
+## Dependencies
 * imagemagick - for color calculation
 * sed
 
-# Installation
+## Installation
 
 Download the script :
 
@@ -17,7 +18,7 @@ Make the script executable :
 
 Then move it to somewhere in your $PATH (/usr/bin, /usr/local/bin, etc)
 
-# Usage
+## Usage
 
     $ colorfil -c [#hexcolor] [-o output_file]
 
