@@ -17,24 +17,22 @@
 TEMP=/tmp/colorfil
 
 # BOLD_LIGHTNESS
-#	0   : black
-#	100 : same as normal font
-#	200 : white
+#   0   : black
+#   100 : same as normal font
+#   200 : white
 
 BOLD_LIGHTNESS=90
 
-checkdeps() {
-	echo >&2 "This program require imagemagick but it's not installed.  Aborting."
-	exit 10
-}
-command -v convert >/dev/null 2>&1 || checkdeps
-
-clean() {
-	if [[ -d $TEMP ]]
-	then
-		rm $TEMP/*.jpg
-		rmdir $TEMP
-	fi
+checkenv() {
+    if [[ ! -z $(command -v converto) ]]; then
+        echo >&2 "This program require imagemagick but it's not installed.  Aborting."
+        exit 10
+    fi
+    if [[ -d $TEMP ]]
+    then
+        rm $TEMP/*.jpg
+        rmdir $TEMP
+    fi
 }
 
 cathelp(){
@@ -50,11 +48,47 @@ if no -o or --outfile, the result is printed directly to stdout.
 EOF
 }
 
-while [[ $# > 0 ]]
-do
-    key="$1"
-    while [[ ${key+x} ]]
+colorize() {
+    mkdir $TEMP
+    [[ -z $(echo $color | grep \#) ]] && color="#$color"
+    convert -size 1x1 xc:$color $TEMP/c100.jpg
+    for i in 0 33 66 133 166; do
+        convert $TEMP/c100.jpg -modulate 100,100,$i $TEMP/c$i.jpg
+    done
+
+    convert $TEMP/*.jpg -append $TEMP/norml.jpg
+    convert $TEMP/norml.jpg -tint $BOLD_LIGHTNESS $TEMP/darkn.jpg
+}
+
+printcolor() {
+    colorize
+    norml=$(convert $TEMP/norml.jpg -format %c histogram:info:- | sed -n "s/^\(.*\):.*\(#.*\) .*$/\2/p")
+    darkn=$(convert $TEMP/darkn.jpg -format %c histogram:info:- | sed -n "s/^\(.*\):.*\(#.*\) .*$/\2/p")
+
+    a=1
+    b=9
+    echo "*.color0: #000000"
+    for i in $norml
     do
+        echo "*.color$a: $i"
+        a=$((a+1))
+    done
+    echo "*.color7: #ffffff"
+    echo "*.color8: #000000"
+    for i in $darkn
+    do
+        echo "*.color$b: $i"
+        b=$((b+1))
+    done
+    echo "*.color15: #ffffff"
+    echo ""
+}
+
+checkenv
+
+while [[ $# > 0 ]]; do
+    key="$1"
+    while [[ ${key+x} ]]; do
         case $key in
             -c*|--color)
                 color="$2"
@@ -65,62 +99,21 @@ do
                 shift
                 ;;
             *)
-				cathelp
-				exit 10
-				break
+                cathelp
+                exit 10
+                break
                 ;;
         esac
         [[ "$key" = -? || "$key" == --* ]] && unset key || key="${key/#-?/-}"
     done
     shift
 done
-
-
 if [[ -z "$color" ]]; then
-	cathelp
+    cathelp
     exit 10
 fi
-
-clean
-mkdir $TEMP
-
-convert -size 1x1 xc:#$color $TEMP/c100.jpg
-for i in 0 33 66 133 166; do
-	convert $TEMP/c100.jpg -modulate 100,100,$i $TEMP/c$i.jpg
-done
-
-convert $TEMP/*.jpg -append $TEMP/norml.jpg
-convert $TEMP/norml.jpg -tint $BOLD_LIGHTNESS $TEMP/darkn.jpg
-
-norml=$(convert $TEMP/norml.jpg -format %c histogram:info:- | sed -n "s/^\(.*\):.*\(#.*\) .*$/\2/p")
-darkn=$(convert $TEMP/darkn.jpg -format %c histogram:info:- | sed -n "s/^\(.*\):.*\(#.*\) .*$/\2/p")
-
-
-
-fill() {
-	a=1
-	b=9
-	echo "*.color0: #000000"
-	for i in $norml
-	do
-		echo "*.color$a: $i"
-		a=$((a+1))
-	done
-	echo "*.color7: #ffffff"
-	echo "*.color8: #000000"
-	for i in $darkn
-	do
-		echo "*.color$b: $i"
-		b=$((b+1))
-	done
-	echo "*.color15: #ffffff"
-	echo ""
-}
-
 if [[ -z "$outfile" ]]; then
-	fill
-	clean
+    printcolor
 else
-	fill > $outfile
-	clean
+    printcolor > $outfile
 fi
